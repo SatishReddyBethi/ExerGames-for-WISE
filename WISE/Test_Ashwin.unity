@@ -1059,8 +1059,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4af6037c11aa9c4e91c193177d0fd9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DM: {fileID: 298977630}
-  PC: {fileID: 1376108378}
 --- !u!1 &44918106
 GameObject:
   m_ObjectHideFlags: 0
@@ -6802,12 +6800,12 @@ MonoBehaviour:
   Rec_Activities: []
   RecordedAct: {fileID: 13541029}
   PC: {fileID: 1376108378}
+  SavingAngleIteration: 0
   TabShift: {fileID: 1074592549}
   Tabs:
   - {fileID: 1636222787}
   - {fileID: 1949013831}
   - {fileID: 1484620538}
-  - {fileID: 1447339705}
   - {fileID: 858621180}
 --- !u!114 &298977631
 MonoBehaviour:
@@ -9539,8 +9537,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e4af6037c11aa9c4e91c193177d0fd9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DM: {fileID: 298977630}
-  PC: {fileID: 1376108378}
 --- !u!1 &443282653
 GameObject:
   m_ObjectHideFlags: 0
@@ -23652,8 +23648,6 @@ MonoBehaviour:
     - m_Text: Instructor's Menu
       m_Image: {fileID: 0}
     - m_Text: Validation Menu
-      m_Image: {fileID: 0}
-    - m_Text: Playback Menu
       m_Image: {fileID: 0}
     - m_Text: Calibration Menu
       m_Image: {fileID: 0}
