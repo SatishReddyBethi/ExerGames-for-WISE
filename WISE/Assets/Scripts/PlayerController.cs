@@ -57,7 +57,7 @@ public class PlayerController : MonoBehaviour {
     public Transform StarForearm;
 
     public bool Live;
-    public Playback PB;
+    private Playback PB;
     public int PB_iteration = 0;
     public float Timer;
     public float percentage;
@@ -178,20 +178,23 @@ public class PlayerController : MonoBehaviour {
     }
     private void Update()
     {
-        if (AngleInfo && (Live || PlayingBack))
+        if (/*AngleInfo && */(Live || PlayingBack)) //If we turn on Angle Info, the angles will be saved only when we click info button in player pause ui
         {
             ShowAngles();
         }
     }
     private void FixedUpdate()
     {
-        
-        //Debug.Log("Live");
         if(Recording && !Live)
         {
             MoveForearm(Conn.LeftForearm, Conn.rightForearm, RecordModelForearm);
             MoveArm(Conn.LeftArm, Conn.RightArm, RecordModelArm);
             MoveBack(Conn.Back, RecordModelBack);
+            if (ActivityIteration > TargetIteration)
+            {
+                ActivityIteration = 0;
+                DM.NextActivity();
+            }
         }
         if (Live)
         {
@@ -204,26 +207,24 @@ public class PlayerController : MonoBehaviour {
             MoveArm(Conn.LeftArm, Conn.RightArm, PlayerArm);
             MoveBack(Conn.Back, PlayerBack);
         }
-        else if (PlayingBack && PlayBackToken != -1 && TimeStampCount != -1)
+        else if (PlayingBack && TimeStampCount != -1)
         {
 
             PB_iteration = Mathf.RoundToInt(Iterations.value);
             if (!PausePB)
             {
-                Timer = PB.TimeStampCache[(PlayBackToken / 5)][PB_iteration] + Time.fixedUnscaledDeltaTime;
+                Timer = PB.TimeStamp[PB_iteration] + Time.fixedUnscaledDeltaTime;
                 if (PB_iteration < 15.0f && Timer > 2.0f)
                 {
                     PB_iteration++;
                 }
                 else
                 {
-                    //float DeltaT = Mathf.Abs(PB.TimeStampCache[(PlayBackToken / 5)][PB_iteration + 1] - PB.TimeStampCache[(PlayBackToken / 5)][PB_iteration]);
-                    //percentage = Timer / DeltaT;
-                    for (int i = 0; i < PB.TimeStampCache[(PlayBackToken / 5)].Count; i++)
+                    for (int i = 0; i < PB.TimeStamp.Count; i++)
                     {
-                        if (Timer < PB.TimeStampCache[(PlayBackToken / 5)][i])
+                        if (Timer < PB.TimeStamp[i])
                         {
-                            if (i < 15 && PB.TimeStampCache[(PlayBackToken / 5)][i] > 2.0f)
+                            if (i < 15 && PB.TimeStamp[i] > 2.0f)
                             {
                                 continue;
                             }
@@ -239,37 +240,22 @@ public class PlayerController : MonoBehaviour {
                                 break;
                             }
                         }
-                        if(i == PB.TimeStampCache[(PlayBackToken / 5)].Count - 1)
+                        if(i == PB.TimeStamp.Count - 1)
                         {
                             PB_iteration++;
                         }
                     }
                 }
             }
-            /*if (percentage > 1 || DeltaT > 0.2f)
-            {
-                PB_iteration++;
-                Timer = 0;
-                percentage = 0;
-            }*/
             if (PB_iteration >= TimeStampCount)
             {
                 PB_iteration = 0;
-                //PlayingBack = false;
-                //TimeStampCount = 0;
-                //return;
             }
-            //Debug.Log(PB_iteration + " , " + PB.TimeStampCache[(PlayBackToken / 5)].Count);
-            //Quaternion A_ApproxQuat = Quaternion.Slerp(PB.DataCache[PlayBackToken][PB_iteration], PB.DataCache[PlayBackToken][PB_iteration + 1], percentage);
-            //Quaternion B_ApproxQuat = Quaternion.Slerp(PB.DataCache[PlayBackToken + 1][PB_iteration], PB.DataCache[PlayBackToken + 1][PB_iteration + 1], percentage);
-            //Quaternion C_ApproxQuat = Quaternion.Slerp(PB.DataCache[PlayBackToken + 2][PB_iteration], PB.DataCache[PlayBackToken + 2][PB_iteration + 1], percentage);
-            //Quaternion D_ApproxQuat = Quaternion.Slerp(PB.DataCache[PlayBackToken + 3][PB_iteration], PB.DataCache[PlayBackToken + 3][PB_iteration + 1], percentage);
-            //Quaternion E_ApproxQuat = Quaternion.Slerp(PB.DataCache[PlayBackToken + 4][PB_iteration], PB.DataCache[PlayBackToken + 4][PB_iteration + 1], percentage);
-            Quaternion A_ApproxQuat = PB.DataCache[PlayBackToken][PB_iteration];
-            Quaternion B_ApproxQuat = PB.DataCache[PlayBackToken + 1][PB_iteration];
-            Quaternion C_ApproxQuat = PB.DataCache[PlayBackToken + 2][PB_iteration];
-            Quaternion D_ApproxQuat = PB.DataCache[PlayBackToken + 3][PB_iteration];
-            Quaternion E_ApproxQuat = PB.DataCache[PlayBackToken + 4][PB_iteration];
+            Quaternion A_ApproxQuat = PB.A_Quat[PB_iteration];
+            Quaternion B_ApproxQuat = PB.B_Quat[PB_iteration];
+            Quaternion C_ApproxQuat = PB.C_Quat[PB_iteration];
+            Quaternion D_ApproxQuat = PB.D_Quat[PB_iteration];
+            Quaternion E_ApproxQuat = PB.E_Quat[PB_iteration];
 
             Iterations.value = PB_iteration;
             MoveForearm(A_ApproxQuat, B_ApproxQuat, PlayerForearm);
@@ -284,48 +270,55 @@ public class PlayerController : MonoBehaviour {
             TimeStampCount = 0;
         }
 
-        if (Live && RecordedActivities.isOn && PB.ActivityTimeStampCache[(Activities.value)].Count != 0)
+        if (Live && RecordedActivities.isOn)
         {
-            if (ActivityIteration > TargetIteration)
+            if (PB.TimeStamp_A.Count != 0)
             {
-                Act_iteration = 0;
-                Act_Timer = 0;
-                percentage = 0;
-                ActivityIteration = 0;
-                DM.NextActivity();
+                if (ActivityIteration > TargetIteration)
+                {
+                    Act_iteration = 0;
+                    Act_Timer = 0;
+                    percentage = 0;
+                    ActivityIteration = 0;
+                    DM.NextActivity();
+                }
+
+                int Index = Activities.value * 5;
+                float T = PB.TimeStamp_A[Act_iteration + 1];
+                Act_Timer += Time.fixedUnscaledDeltaTime;
+                percentage = Act_Timer / T;
+
+                if (percentage > 1)
+                {
+                    Debug.Log(PB.TimeStamp_A[Act_iteration]);
+                    Act_iteration++;
+                    Act_Timer = 0;
+                    percentage = 0;
+                    ActivityIteration++;
+                }
+
+                if (Act_iteration == PB.TimeStamp_A.Count - 1)
+                {
+                    Act_iteration = 0;
+                    Act_Timer = 0;
+                    percentage = 0;
+                    ActivityIteration++;
+                }
+
+                Quaternion A_ApproxQuat = Quaternion.Slerp(PB.A_Quat_A[Act_iteration], PB.A_Quat_A[Act_iteration + 1], percentage);
+                Quaternion B_ApproxQuat = Quaternion.Slerp(PB.B_Quat_A[Act_iteration], PB.B_Quat_A[Act_iteration + 1], percentage);
+                Quaternion C_ApproxQuat = Quaternion.Slerp(PB.C_Quat_A[Act_iteration], PB.C_Quat_A[Act_iteration + 1], percentage);
+                Quaternion D_ApproxQuat = Quaternion.Slerp(PB.D_Quat_A[Act_iteration], PB.D_Quat_A[Act_iteration + 1], percentage);
+                Quaternion E_ApproxQuat = Quaternion.Slerp(PB.E_Quat_A[Act_iteration], PB.E_Quat_A[Act_iteration + 1], percentage);
+
+                MoveForearm(A_ApproxQuat, B_ApproxQuat, InstructerForearm);
+                MoveArm(C_ApproxQuat, D_ApproxQuat, InstructerArm);
+                MoveBack(E_ApproxQuat, InstructerBack);
             }
-
-            int Index = Activities.value * 5;
-            float T = PB.ActivityTimeStampCache[(Activities.value)][Act_iteration + 1];
-            Act_Timer += Time.fixedUnscaledDeltaTime;
-            percentage = Act_Timer / T;
-
-            if (percentage > 1)
+            else
             {
-                Debug.Log(PB.ActivityCache[Index][Act_iteration].x);
-                Act_iteration++;
-                Act_Timer = 0;
-                percentage = 0;
-                ActivityIteration++;
+                PB.LoadActivityFile(Activities.options[Activities.value].text);
             }
-            
-            if (Act_iteration == PB.ActivityTimeStampCache[(Activities.value)].Count - 1)
-            {
-                Act_iteration = 0;
-                Act_Timer = 0;
-                percentage = 0;
-                ActivityIteration++;
-            }
-
-            Quaternion A_ApproxQuat = Quaternion.Slerp(PB.ActivityCache[Index][Act_iteration], PB.ActivityCache[Index][Act_iteration + 1], percentage);
-            Quaternion B_ApproxQuat = Quaternion.Slerp(PB.ActivityCache[Index + 1][Act_iteration], PB.ActivityCache[Index + 1][Act_iteration + 1], percentage);
-            Quaternion C_ApproxQuat = Quaternion.Slerp(PB.ActivityCache[Index + 2][Act_iteration], PB.ActivityCache[Index + 2][Act_iteration + 1], percentage);
-            Quaternion D_ApproxQuat = Quaternion.Slerp(PB.ActivityCache[Index + 3][Act_iteration], PB.ActivityCache[Index + 3][Act_iteration + 1], percentage);
-            Quaternion E_ApproxQuat = Quaternion.Slerp(PB.ActivityCache[Index + 4][Act_iteration], PB.ActivityCache[Index + 4][Act_iteration + 1], percentage);
-
-            MoveForearm(A_ApproxQuat, B_ApproxQuat, InstructerForearm);
-            MoveArm(C_ApproxQuat, D_ApproxQuat, InstructerArm);
-            MoveBack(E_ApproxQuat, InstructerBack);
         }
         else
         {
@@ -333,7 +326,7 @@ public class PlayerController : MonoBehaviour {
             Act_Timer = 0;
             percentage = 0;
         }
-
+        
     }
 
     public void AngleStatus(bool Status)
@@ -536,6 +529,17 @@ public class PlayerController : MonoBehaviour {
             PB_RightAngles[2].text = PlayerArm[1].localEulerAngles.z.ToString("F2");
             PB_RightAngles[3].text = PlayerForearm[1].localEulerAngles.y.ToString("F2");
             PB_RightAngles[4].text = PlayerForearm[1].localEulerAngles.x.ToString("F2");
+
+            /*PB_LeftAngles[0].text = Conn.LeftAngles[0].ToString("F2");
+            PB_LeftAngles[1].text = Conn.LeftAngles[1].ToString("F2");
+            PB_LeftAngles[2].text = Conn.LeftAngles[2].ToString("F2");
+            PB_LeftAngles[3].text = Conn.LeftAngles[3].ToString("F2");
+            PB_LeftAngles[4].text = Conn.LeftAngles[4].ToString("F2");
+            PB_RightAngles[0].text = Conn.RightAngles[0].ToString("F2");
+            PB_RightAngles[1].text = Conn.RightAngles[1].ToString("F2");
+            PB_RightAngles[2].text = Conn.RightAngles[2].ToString("F2");
+            PB_RightAngles[3].text = Conn.RightAngles[3].ToString("F2");
+            PB_RightAngles[4].text = Conn.RightAngles[4].ToString("F2");*/
         }
     }
 
@@ -830,13 +834,13 @@ public class PlayerController : MonoBehaviour {
     {
         if (!RecordedActivities.isOn)
         {
-            Curr_Anim.enabled = false;
+            //Curr_Anim.enabled = false;
             Curr_Anim.SetBool("Pause", true);
             ActivityIteration = 0;
         }
         else
         {
-            Curr_Anim.enabled = false;
+            //Curr_Anim.enabled = false;
             ActivityIteration = 0;
         }
 
@@ -880,7 +884,7 @@ public class PlayerController : MonoBehaviour {
     #region PlayBack System
     public void DoPlayBack()//Do Playback and all Necessary Camera Zooms and Texts
     {
-        TimeStampCount = PB.TimeStampCache[(PlayBackToken / 5)].Count - 1;
+        TimeStampCount = PB.TimeStamp.Count - 1;
         if (TimeStampCount != -1)
         {
             PlayingBack = true;

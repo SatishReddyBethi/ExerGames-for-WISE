@@ -49,11 +49,17 @@ public class DeviceManager : MonoBehaviour
     public List<string> ActivitiesNames;
     public List<string> Rec_Activities;
     private RecordActivity RA;
+    private Playback PB;
     public Toggle RecordedAct;
+    public Quaternion TestRef;
+    public Quaternion TestQuat;
+    public string TestConfig;
+    public Vector3 TestAngles;
     private void Start()
     {
         pause = true;
         RA = GetComponent<RecordActivity>();
+        PB = GetComponent<Playback>();
         ActivitiesNames = new List<string>();
         Rec_Activities = new List<string>();
         foreach (var Option in Activties.options)
@@ -63,7 +69,6 @@ public class DeviceManager : MonoBehaviour
         RefreshActivities();
         PatientDictionary = new Dictionary<string, string>();
         PatientData = "";
-        //Time.timeScale = 0.0f;
         savedDataPath = Application.persistentDataPath + "/savedData";
         savedAngleDataPath = Application.persistentDataPath + "/savedAngleDataPath";
         Conn = GetComponent<Connection>();
@@ -76,6 +81,7 @@ public class DeviceManager : MonoBehaviour
     public void RefreshActivities()
     {
         RA.GetActivities();
+        Rec_Activities.Clear();
         Rec_Activities.AddRange(RA.ActivityFileNames);
         Activties.ClearOptions();
         Activties.AddOptions(Rec_Activities);
@@ -85,8 +91,15 @@ public class DeviceManager : MonoBehaviour
     private void Update()
     {
         UpdateCalibration();
+        TestEuler();
     }
 
+    public void TestEuler()
+    {
+        TestAngles = Conn.Quat2Angle(TestQuat, TestConfig);
+        //Debug.Log(TestRef);
+        //TestAngles = Conn.GetAngles("LA", TestRef, TestQuat);
+    }
     public void SetActivities()
     {
         if (RecordedAct.isOn)
@@ -118,53 +131,6 @@ public class DeviceManager : MonoBehaviour
         {
             PatientName = "Unknown_Subject";
         }
-        /*if (Gender.value == 0)
-        {
-            gender = "Male";
-        }
-        else
-        {
-            gender = "Female";
-        }
-        if (Dexterity.value == 0)
-        {
-            dexterity = "Left";
-        }
-        else
-        {
-            dexterity = "Right";
-        }
-        switch (Difficulty.value)
-        {
-            case 0:
-                difficulty = "Easy";
-                break;
-            case 1:
-                difficulty = "Intermediate";
-                break;
-            case 2:
-                difficulty = "Hard";
-                break;
-        }
-
-        switch (Age.value)
-        {
-            case 0:
-                age = "20-30";
-                break;
-            case 1:
-                age = "30-40";
-                break;
-            case 2:
-                age = "40-50";
-                break;
-            case 3:
-                age = "50-60";
-                break;
-            case 4:
-                age = "60+";
-                break;
-        }*/
 
         dictionaryFullName_P = savedDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
         dictionaryFullName_PA = savedAngleDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
@@ -212,9 +178,15 @@ public class DeviceManager : MonoBehaviour
             SavingIteration += 1;
         }
 
-        if(PC.AngleText != "")
+        /*if(PC.AngleText != "")//Kinect Angle System 
         {
             GlobalAngles += PC.AngleText + "\n";
+            SavingAngleIteration += 1;
+        }*/
+
+        if (Conn.JCSAngles != "")
+        {
+            GlobalAngles += Conn.JCSAngles + "," + CurrTime.ToString("F3") + "\n";
             SavingAngleIteration += 1;
         }
 
@@ -250,12 +222,46 @@ public class DeviceManager : MonoBehaviour
 
     public Dropdown TabShift;
     public GameObject[] Tabs;
+    public int CameraViewValue;
+    public void ChangeCamerawhileAnimation()
+    {
+        cam.transform.position = CameraTransforms[CameraViewValue].position;
+        cam.transform.rotation = CameraTransforms[CameraViewValue].rotation;
+        if (CameraViewValue == 0 || CameraViewValue == 1)//Back and Front  
+        {
+            PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, CameraViewValue * 180.0f, 0f);
+            PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, CameraViewValue * 180.0f, 0f);
+            //Rotating Models when the camera view changes
+            PlayerModels[0].transform.rotation = Quaternion.Euler(0f, CameraViewValue * -20.0f, 0f);
+            PlayerModels[1].transform.rotation = Quaternion.Euler(0f, CameraViewValue * 20.0f, 0f);
+            PlayerModels[0].transform.localPosition = new Vector3(0.7f, 0.5f, -1.7f);
+            PlayerModels[1].transform.localPosition = new Vector3(-3.34f, 0.5f, -1.6f);
+        }
+        else if (CameraViewValue == 2)//Right
+        {
+            PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
+            PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
+            PlayerModels[0].transform.localPosition = new Vector3(0.7f, 0.5f, -3.7f);
+            PlayerModels[1].transform.localPosition = new Vector3(-3.34f, 0.5f, -1.6f);
+            PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
+            PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
+        }
+        else if (CameraViewValue == 3)//Left
+        {
+            PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
+            PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
+            PlayerModels[0].transform.localPosition = new Vector3(0.7f, 0.5f, -1.7f);
+            PlayerModels[1].transform.localPosition = new Vector3(-3.34f, 0.5f, -3.6f);
+            PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
+            PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
+        }
+    }
 
     public void ChangeCameraView()
     {
         cam.transform.position = CameraTransforms[CameraView.value].position;
         cam.transform.rotation = CameraTransforms[CameraView.value].rotation;
-        if(CameraView.value == 0 || CameraView.value == 1)
+        if(CameraView.value == 0 || CameraView.value == 1)//Back and Front  
         {
             PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, CameraView.value * 180.0f, 0f);
             PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, CameraView.value * 180.0f, 0f);
@@ -265,7 +271,7 @@ public class DeviceManager : MonoBehaviour
             PlayerModels[0].transform.localPosition = new Vector3(0.7f, 0.5f, -1.7f);
             PlayerModels[1].transform.localPosition = new Vector3(-3.34f, 0.5f, -1.6f);
         }
-        else if(CameraView.value == 2)
+        else if(CameraView.value == 2)//Right
         {
             PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
             PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
@@ -274,7 +280,7 @@ public class DeviceManager : MonoBehaviour
             PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
             PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
         }
-        else if(CameraView.value == 3)
+        else if(CameraView.value == 3)//Left
         {
             PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
             PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, -90.0f, 0f);
@@ -289,6 +295,7 @@ public class DeviceManager : MonoBehaviour
     {
         ActivityChanged = true;
         CameraChangeDone = false;
+        PC.ActivityIteration = 0;
         if(pause)
         {
             Activties.value = PatientMenu_Activities.value;
@@ -297,6 +304,11 @@ public class DeviceManager : MonoBehaviour
         {
             PatientMenu_Activities.value = Activties.value;
         }
+        //Loading Recorded Activity
+        PC.Act_iteration = 0;
+        PC.Act_Timer = 0;
+        PC.percentage = 0;
+        PB.LoadActivityFile(Activties.options[Activties.value].text);
     }
 
     public void NextActivity()

@@ -39,7 +39,7 @@ public class RecordActivity : MonoBehaviour
         cam.transform.position = CameraTransforms[0].position;
         cam.transform.rotation = CameraTransforms[0].rotation;
         GetAllRecordedData();
-        Invoke("LoadActivities", 0.5f);
+        //Invoke("LoadActivities", 0.5f);
         Keys.text = "0";
     }
 
@@ -253,7 +253,7 @@ public class RecordActivity : MonoBehaviour
                         }
                     }
                     
-                    fileInfo[i] = TimeStamp[1] + "/" + TimeStamp[0] + "/" + TimeStamp[2] + "  " + TimeStamp[3] + ":" + TimeStamp[4] + ":" + TimeStamp[5];
+                    fileInfo[i] = TimeStamp[1] + "/" + TimeStamp[0] + "/" + TimeStamp[2] + "|" + TimeStamp[3] + ":" + TimeStamp[4] + ":" + TimeStamp[5];
                     //Debug.Log("Done");
                 }
 
@@ -270,8 +270,8 @@ public class RecordActivity : MonoBehaviour
         return fileInfo;
     }
 
+    List<string> UnsortedPaths;
     public GameObject EmptyObj;
-
     void GetAllRecordedData()//Should be called only once at the start of the program
     {
         Activities.ClearOptions();
@@ -296,28 +296,54 @@ public class RecordActivity : MonoBehaviour
             ClonedObjects.Add(EmptySubject);
             string[] SubjectActivities;//Names of Directories of Activitiesz    
             SubjectActivities = GetSubjectActivities(SubjectID);
-            float TempSize = 0f;
+            float TempSize = 0f;            
             foreach (string Activity in SubjectActivities)
-            {
+            {/*                
                 string[] SubjectRecordingTimeStamps;//Names of Recording Files Time Stamps of Subject Activities
                 SubjectRecordingTimeStamps = GetSubjectRecordingTimeStamps(Activity, SubjectID);
-                
-                for (int i = 0; i < SubjectRecordingTimeStamps.Length/2; i++)
+                for (int i = 0; i < SubjectRecordingTimeStamps.Length / 2; i++)
                 {
                     //Debug.Log("Done");
 
-                    
+
                     GameObject Clone = Instantiate(Item_Prefab, EmptySubject.transform);
                     ClonedObjects.Add(Clone);
                     RectTransform CloneTransform = Clone.GetComponent<RectTransform>();
-                    CloneTransform.localPosition = new Vector3(-6.1f, (-42.0f - (110.0f * i))-TempSize, 0f);
+                    CloneTransform.localPosition = new Vector3(-6.1f, (-42.0f - (110.0f * i)) - TempSize, 0f);
                     SetupAndLoadData CloneSLD = Clone.GetComponent<SetupAndLoadData>();
                     CloneSLD.TimeStamp = SubjectRecordingTimeStamps[i];
                     CloneSLD.ActivityName = Activity;
-                    CloneSLD.Path = SubjectRecordingTimeStamps[i + (SubjectRecordingTimeStamps.Length/2)];
+                    CloneSLD.Path = SubjectRecordingTimeStamps[i + (SubjectRecordingTimeStamps.Length / 2)];
                     CloneSLD.LoadingTextReferenceDataDone();
                 }
                 TempSize += (SubjectRecordingTimeStamps.Length / 2) * 110.0f;
+                */
+                //-------------------------------------------------------------------------------------------------------------------------//
+                List<int[]> SortedTimeStamps = new List<int[]>(); //Each element has time(h,m,s), date, month and year
+                List<int[]> UnsortedTimeStamps = new List<int[]>();
+                List<string> SortedPaths = new List<string>();
+                List<string> SubjectRecordingTimeStamps = new List<string>(GetSubjectRecordingTimeStamps(Activity, SubjectID));
+                
+                // Parsing and Sorthing Time Stamps and Paths
+                UnsortedTimeStamps = ParseTimeStamp(SubjectRecordingTimeStamps.GetRange(0, SubjectRecordingTimeStamps.Count / 2));
+                UnsortedPaths = SubjectRecordingTimeStamps.GetRange(SubjectRecordingTimeStamps.Count / 2, SubjectRecordingTimeStamps.Count / 2);
+
+                SortedTimeStamps = SortTimeStmap(UnsortedTimeStamps);
+
+                for (int i = 0; i < UnsortedTimeStamps.Count; i++)
+                {
+                    GameObject Clone = Instantiate(Item_Prefab, EmptySubject.transform);
+                    ClonedObjects.Add(Clone);
+                    RectTransform CloneTransform = Clone.GetComponent<RectTransform>();
+                    CloneTransform.localPosition = new Vector3(-6.1f, (-42.0f - (110.0f * i)) - TempSize, 0f);
+                    SetupAndLoadData CloneSLD = Clone.GetComponent<SetupAndLoadData>();
+                    CloneSLD.TimeStamp = SortedTimeStamps[i][0].ToString("D2") + "/" + SortedTimeStamps[i][1].ToString("D2") + "/" + SortedTimeStamps[i][2].ToString("D4") + " " + SortedTimeStamps[i][3].ToString("D2") + ":" + SortedTimeStamps[i][4].ToString("D2") + ":" + SortedTimeStamps[i][5].ToString("D2");
+                    CloneSLD.ActivityName = Activity;
+                    CloneSLD.Path = UnsortedPaths[i];
+                    CloneSLD.LoadingTextReferenceDataDone();
+                }
+                TempSize += (UnsortedTimeStamps.Count) * 110.0f;
+                //-------------------------------------------------------------------------------------------------------------------------//
             }
             if (TempSize > 580.0f)
             {
@@ -331,7 +357,126 @@ public class RecordActivity : MonoBehaviour
             DisableAllContent();
         }
         PB.ClearCache();
-        LoadActivities();
+       // LoadActivities();
+    }
+
+    bool once = true;
+    bool twice = true;
+    List<int[]> ParseTimeStamp(List<string> Data)// String Format: "mm/dd/yyyy hh:mm:ss"
+    {
+        List<int[]> ParsedTimeStamp = new List<int[]>();
+        foreach(string StringTimeStamp in Data)
+        {
+            string[] SplitData = StringTimeStamp.Split('|');
+            string[] TimeData = SplitData[1].Split(':');
+            string[] DateData = SplitData[0].Split('/');
+            //Debug.Log(StringTimeStamp);
+            //Debug.Log(TimeData[0] + " " + TimeData[1] + " " + TimeData[2]);
+            //Debug.Log(DateData[0] + " " + DateData[1] + " " + DateData[2]);
+            int[] TimeStampData = { int.Parse(DateData[0]), int.Parse(DateData[1]), int.Parse(DateData[2]), int.Parse(TimeData[0]), int.Parse(TimeData[1]), int.Parse(TimeData[2]) };
+            ParsedTimeStamp.Add(TimeStampData);
+
+            /*if (once)
+            {
+                string newData = "";
+                foreach(int data in TimeStampData)
+                {
+                    newData += data.ToString() + " ";
+                }
+                Debug.Log(newData);
+            }*/
+        }
+        /*Debug.Log("---");
+        once = false;*/
+        return ParsedTimeStamp;
+    }
+
+    List<int[]> SortTimeStmap(List<int[]> UnsortedData)
+    {
+        List<int[]> SortedTimeStamp = new List<int[]>();
+        List<string> SortedPath = new List<string>();
+        for (int i = 0; i < UnsortedData.Count; i++)
+        {
+            int SortedIndex = 0;
+            for(int j = SortedTimeStamp.Count-1; j > -1; j--)
+            {
+                if (UnsortedData[i][2] > SortedTimeStamp[j][2])// Year
+                {
+                    SortedIndex = j;//Comes before the current sorted TimeStamp
+                }
+                else
+                {
+                    if (UnsortedData[i][0] > SortedTimeStamp[j][0])// Month
+                    {
+                        SortedIndex = j;//Comes before the current sorted TimeStamp
+                    }
+                    else
+                    {
+                        if (UnsortedData[i][1] > SortedTimeStamp[j][1])// Day
+                        {
+                            SortedIndex = j;//Comes before the current sorted TimeStamp
+                        }
+                        else
+                        {
+                            if (UnsortedData[i][3] > SortedTimeStamp[j][3])// Hour
+                            {
+                                SortedIndex = j;//Comes before the current sorted TimeStamp
+                            }
+                            else
+                            {
+                                if (UnsortedData[i][4] > SortedTimeStamp[j][4])//Minute
+                                {
+                                    SortedIndex = j;//Comes before the current sorted TimeStamp
+                                }
+                                else
+                                {
+                                    if (UnsortedData[i][5] > SortedTimeStamp[j][5])//Second
+                                    {
+                                        SortedIndex = j;//Comes before the current sorted TimeStamp
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }            
+            SortedTimeStamp.Insert(SortedIndex,UnsortedData[i]);
+            SortedPath.Insert(SortedIndex, UnsortedPaths[i]);
+            /*
+            if (twice)
+            {
+                Debug.Log(SortedTimeStamp.Count);
+                foreach (int[] Item in SortedTimeStamp)
+                {
+                    string newData = "";
+                    foreach (int data in Item)
+                    {
+                        newData += data.ToString() + " ";
+                    }
+                    Debug.Log(newData);
+                }
+
+                Debug.Log("---" + i.ToString());
+            }*/
+        }
+        /*
+        if (twice)
+        {
+            foreach(int[] Item in SortedTimeStamp)
+            {
+                string newData = "";
+                foreach (int data in Item)
+                {
+                    newData += data.ToString() + " ";
+                }
+                Debug.Log(newData);
+            }
+
+            Debug.Log("---");
+        }
+        twice = false;*/
+        
+        return SortedTimeStamp;
     }
 
     public void RefreshFiles()

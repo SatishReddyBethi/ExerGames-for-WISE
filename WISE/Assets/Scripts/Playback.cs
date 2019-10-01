@@ -6,18 +6,29 @@ using UnityEngine.UI;
 
 public class Playback : MonoBehaviour
 {
+    /*
     public List<List<Quaternion>> DataCache;
     public List<List<Quaternion>> ActivityCache;// = new List<List<Quaternion>>();
     public List<List<float>> TimeStampCache;
     public List<List<float>> ActivityTimeStampCache;// = new List<List<float>>();
+    */
     public int DataCacheToken = 0;
     public string[] patientDetails;
+    // Playback Quaternions
     public List<Quaternion> A_Quat;
     public List<Quaternion> B_Quat;
     public List<Quaternion> C_Quat;
     public List<Quaternion> D_Quat;
     public List<Quaternion> E_Quat;
+    // Activity Quaternuions
+    public List<Quaternion> A_Quat_A;
+    public List<Quaternion> B_Quat_A;
+    public List<Quaternion> C_Quat_A;
+    public List<Quaternion> D_Quat_A;
+    public List<Quaternion> E_Quat_A;
+
     public List<float> TimeStamp;
+    public List<float> TimeStamp_A;
     public int LineCount;
     //public string saveddatapath;
     //public string Filename = "Test2_26_03_2019_12_49_06";
@@ -25,10 +36,10 @@ public class Playback : MonoBehaviour
     void Awake()
     {
         patientDetails = new string[4];
-        DataCache = new List<List<Quaternion>>();
-        ActivityCache = new List<List<Quaternion>>();
-        TimeStampCache = new List<List<float>>();
-        ActivityTimeStampCache = new List<List<float>>();
+      //  DataCache = new List<List<Quaternion>>();
+        //ActivityCache = new List<List<Quaternion>>();
+        //TimeStampCache = new List<List<float>>();
+        //ActivityTimeStampCache = new List<List<float>>();
         A_Quat = new List<Quaternion>();
         B_Quat = new List<Quaternion>();
         C_Quat = new List<Quaternion>();
@@ -135,25 +146,25 @@ public class Playback : MonoBehaviour
         }
 
         int token = DataCacheToken;
-        DataCache.Add(A_Quat);
+        /*DataCache.Add(A_Quat);
         DataCache.Add(B_Quat);
         DataCache.Add(C_Quat);
         DataCache.Add(D_Quat);
         DataCache.Add(E_Quat);
         TimeStampCache.Add(TimeStamp);
         //Debug.Log(TimeStamp.Count);
-        DataCacheToken += 5;
+        DataCacheToken += 5;*/
         return token;
     }
 
     public void LoadActivityFile(string ActivityName)
     {
-        TimeStamp.Clear();
-        A_Quat.Clear();
-        B_Quat.Clear();
-        C_Quat.Clear();
-        D_Quat.Clear();
-        E_Quat.Clear();
+        TimeStamp_A.Clear();
+        A_Quat_A.Clear();
+        B_Quat_A.Clear();
+        C_Quat_A.Clear();
+        D_Quat_A.Clear();
+        E_Quat_A.Clear();
         string FilePath = Application.persistentDataPath + "/ActivityData/" + ActivityName + ".txt";
         if (File.Exists(FilePath))
         {
@@ -176,7 +187,7 @@ public class Playback : MonoBehaviour
 
                     if (ReadStatus)
                     {
-                        TimeStamp.Add(float.Parse(buffer[25]));
+                        TimeStamp_A.Add(float.Parse(buffer[25]));
                         //Debug.Log("Timed");
                         try
                         {
@@ -188,23 +199,23 @@ public class Playback : MonoBehaviour
                                     case "a":
                                         float a = float.Parse(buffer[2]);
                                         Quat = new Quaternion(a, float.Parse(buffer[3]), float.Parse(buffer[4]), float.Parse(buffer[1]));
-                                        A_Quat.Add(Quat);
+                                        A_Quat_A.Add(Quat);
                                         break;
                                     case "b":
                                         Quat = new Quaternion(float.Parse(buffer[7]), float.Parse(buffer[8]), float.Parse(buffer[9]), float.Parse(buffer[6]));
-                                        B_Quat.Add(Quat);
+                                        B_Quat_A.Add(Quat);
                                         break;
                                     case "c":
                                         Quat = new Quaternion(float.Parse(buffer[12]), float.Parse(buffer[13]), float.Parse(buffer[14]), float.Parse(buffer[11]));
-                                        C_Quat.Add(Quat);
+                                        C_Quat_A.Add(Quat);
                                         break;
                                     case "d":
                                         Quat = new Quaternion(float.Parse(buffer[17]), float.Parse(buffer[18]), float.Parse(buffer[19]), float.Parse(buffer[16]));
-                                        D_Quat.Add(Quat);
+                                        D_Quat_A.Add(Quat);
                                         break;
                                     case "e":
                                         Quat = new Quaternion(float.Parse(buffer[22]), float.Parse(buffer[23]), float.Parse(buffer[24]), float.Parse(buffer[21]));
-                                        E_Quat.Add(Quat);
+                                        E_Quat_A.Add(Quat);
                                         break;
                                     default:
                                         break;
@@ -232,22 +243,24 @@ public class Playback : MonoBehaviour
         {
             Debug.Log("Path Does not exist");
         }
-        ActivityCache.Add(A_Quat);
+       /* ActivityCache.Add(A_Quat);
         ActivityCache.Add(B_Quat);
         ActivityCache.Add(C_Quat);
         ActivityCache.Add(D_Quat);
         ActivityCache.Add(E_Quat);
         ActivityTimeStampCache.Add(TimeStamp);
-        //Debug.Log(ActivityCache[0][1].x);
+        //Debug.Log(ActivityCache[0][1].x);*/
     }
 
     public void ClearCache()
     {
+        /*
             ActivityCache = new List<List<Quaternion>>();
             ActivityTimeStampCache = new List<List<float>>();
             DataCache = new List<List<Quaternion>>();
             TimeStampCache = new List<List<float>>();
             Debug.Log("Initiated");
+            */
     }
 
 }
