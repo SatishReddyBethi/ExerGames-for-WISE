@@ -71,11 +71,14 @@ public class PlayerController : MonoBehaviour {
     public bool Recording;
     public Text[] LeftAngles;
     public Text[] RightAngles;
+    public Text[] Cf_LeftAngles;
+    public Text[] Cf_RightAngles;
     public Text[] PB_LeftAngles;
     public Text[] PB_RightAngles;
     public bool AngleInfo;
     public int ActivityIteration = 0;
     public int TargetIteration = 5;
+    private bool testing=false;
     // Use this for initialization
     void Start () {
         Forearm_x = new float[2];
@@ -99,6 +102,9 @@ public class PlayerController : MonoBehaviour {
         Conn = D_M.GetComponent<Connection>();
         DM = D_M.GetComponent<DeviceManager>();
         PB = D_M.GetComponent<Playback>();
+        LRArm = new Image[2];
+        LRArm[0] = LRArmConfig[0].GetComponent<Image>();
+        LRArm[1] = LRArmConfig[3].GetComponent<Image>();
     }
 
     #region Update for Euler Angles (Not Being Used)
@@ -182,9 +188,21 @@ public class PlayerController : MonoBehaviour {
         {
             ShowAngles();
         }
+        if (testing)
+        {
+            ConfigDirections();
+            ShowAngles();
+        }
     }
+
     private void FixedUpdate()
     {
+        if (testing)
+        {
+            MoveForearm(Conn.LeftForearm, Conn.rightForearm, PlayerForearm);
+            MoveArm(Conn.LeftArm, Conn.RightArm, PlayerArm);
+            MoveBack(Conn.Back, PlayerBack);
+        }
         if(Recording && !Live)
         {
             MoveForearm(Conn.LeftForearm, Conn.rightForearm, RecordModelForearm);
@@ -338,78 +356,80 @@ public class PlayerController : MonoBehaviour {
     public GameObject[] AngleTexts;
     void ManageTexts()
     {
+        GameObject[] DisplayTexts = AngleTexts;
+
         DisableAllText();
         switch (DM.CurrentActivity)
         {
             case "Left Shoulder Abduction":
-                AngleTexts[2].SetActive(true);
-                AngleTexts[7].SetActive(true);
+                DisplayTexts[2].SetActive(true);
+                DisplayTexts[7].SetActive(true);
                 break;
             case "Right Shoulder Abduction":
-                AngleTexts[17].SetActive(true);
-                AngleTexts[12].SetActive(true);
+                DisplayTexts[17].SetActive(true);
+                DisplayTexts[12].SetActive(true);
                 break;
             case "Bilateral Shoulders Abduction":
-                AngleTexts[2].SetActive(true);
-                AngleTexts[7].SetActive(true);
-                AngleTexts[17].SetActive(true);
-                AngleTexts[12].SetActive(true);
+                DisplayTexts[2].SetActive(true);
+                DisplayTexts[7].SetActive(true);
+                DisplayTexts[17].SetActive(true);
+                DisplayTexts[12].SetActive(true);
                 break;
             case "Left Forearm Pronation Supination":
-                AngleTexts[9].SetActive(true);
-                AngleTexts[4].SetActive(true);
+                DisplayTexts[9].SetActive(true);
+                DisplayTexts[4].SetActive(true);
                 break;
             case "Right Forearm Pronation Supination":
-                AngleTexts[14].SetActive(true);
-                AngleTexts[19].SetActive(true);
+                DisplayTexts[14].SetActive(true);
+                DisplayTexts[19].SetActive(true);
                 break;
             case "Bilateral Forearm Pronation Supination":
-                AngleTexts[9].SetActive(true);
-                AngleTexts[4].SetActive(true);
-                AngleTexts[14].SetActive(true);
-                AngleTexts[19].SetActive(true);
+                DisplayTexts[9].SetActive(true);
+                DisplayTexts[4].SetActive(true);
+                DisplayTexts[14].SetActive(true);
+                DisplayTexts[19].SetActive(true);
                 break;
             case "Left Shoulder Flexion Extension":
-                AngleTexts[5].SetActive(true);
-                AngleTexts[0].SetActive(true);
+                DisplayTexts[5].SetActive(true);
+                DisplayTexts[0].SetActive(true);
                 break;
             case "Right Shoulder Flexion Extension":
-                AngleTexts[15].SetActive(true);
-                AngleTexts[10].SetActive(true);
+                DisplayTexts[15].SetActive(true);
+                DisplayTexts[10].SetActive(true);
                 break;
             case "Bilaeral Shoulder Flexion Extension":
-                AngleTexts[5].SetActive(true);
-                AngleTexts[0].SetActive(true);
-                AngleTexts[15].SetActive(true);
-                AngleTexts[10].SetActive(true);
+                DisplayTexts[5].SetActive(true);
+                DisplayTexts[0].SetActive(true);
+                DisplayTexts[15].SetActive(true);
+                DisplayTexts[10].SetActive(true);
                 break;
             case "Left Elbow Flexion Extension":
-                AngleTexts[8].SetActive(true);
-                AngleTexts[3].SetActive(true);
+                DisplayTexts[8].SetActive(true);
+                DisplayTexts[3].SetActive(true);
                 break;
             case "Right Elbow Flexion Extension":
-                AngleTexts[18].SetActive(true);
-                AngleTexts[13].SetActive(true);
+                DisplayTexts[18].SetActive(true);
+                DisplayTexts[13].SetActive(true);
                 break;
             case "Bilateral Elbow Flexion Extension":
-                AngleTexts[8].SetActive(true);
-                AngleTexts[3].SetActive(true);
-                AngleTexts[18].SetActive(true);
-                AngleTexts[13].SetActive(true);
+                DisplayTexts[8].SetActive(true);
+                DisplayTexts[3].SetActive(true);
+                DisplayTexts[18].SetActive(true);
+                DisplayTexts[13].SetActive(true);
                 break;
             case "Left Shoulder I_E Rotation":
-                AngleTexts[1].SetActive(true);
-                AngleTexts[6].SetActive(true);
+                DisplayTexts[1].SetActive(true);
+                DisplayTexts[6].SetActive(true);
                 break;
             case "Right Shoulder I_E Rotation":
-                AngleTexts[11].SetActive(true);
-                AngleTexts[16].SetActive(true);
+                DisplayTexts[11].SetActive(true);
+                DisplayTexts[16].SetActive(true);
                 break;
             case "Bilateral Shoulder I_E Rotation":
-                AngleTexts[1].SetActive(true);
-                AngleTexts[6].SetActive(true);
-                AngleTexts[11].SetActive(true);
-                AngleTexts[16].SetActive(true);
+                DisplayTexts[1].SetActive(true);
+                DisplayTexts[6].SetActive(true);
+                DisplayTexts[11].SetActive(true);
+                DisplayTexts[16].SetActive(true);
                 break;
         }
     }
@@ -517,6 +537,21 @@ public class PlayerController : MonoBehaviour {
             RightAngles[3].text = Conn.RightAngles[3].ToString("F2");
             RightAngles[4].text = Conn.RightAngles[4].ToString("F2");
         }
+
+        if (testing)
+        {
+            Cf_LeftAngles[0].text = Conn.LeftAngles[0].ToString("F2");
+            Cf_LeftAngles[1].text = Conn.LeftAngles[1].ToString("F2");
+            Cf_LeftAngles[2].text = Conn.LeftAngles[2].ToString("F2");
+            Cf_LeftAngles[3].text = Conn.LeftAngles[3].ToString("F2");
+            Cf_LeftAngles[4].text = Conn.LeftAngles[4].ToString("F2");
+            Cf_RightAngles[0].text = Conn.RightAngles[0].ToString("F2");
+            Cf_RightAngles[1].text = Conn.RightAngles[1].ToString("F2");
+            Cf_RightAngles[2].text = Conn.RightAngles[2].ToString("F2");
+            Cf_RightAngles[3].text = Conn.RightAngles[3].ToString("F2");
+            Cf_RightAngles[4].text = Conn.RightAngles[4].ToString("F2");
+        }
+
         if (PlayingBack)
         {
             PB_LeftAngles[0].text = PlayerArm[0].localEulerAngles.x.ToString("F2");
@@ -591,7 +626,7 @@ public class PlayerController : MonoBehaviour {
             //anim_M.enabled = false;
             //anim_F.enabled = true;
             Curr_Anim = anim_F;
-            Instructer = Players[7];
+            Instructer = Players[0];
             InstructerShoulder[0] = Players[1].transform;
             InstructerShoulder[1] = Players[2].transform;
             InstructerForearm[0] = Players[5].transform;
@@ -819,7 +854,61 @@ public class PlayerController : MonoBehaviour {
         Invoke("ManageTexts", 0.25f);
     }
 
-    
+    public GameObject[] LRArmConfig;
+    public Image[] LRArm;
+
+    public void ConfigureStart()
+    {
+        testing = true;
+        Instructer.SetActive(false);
+        ConfigDirections();
+    }
+
+    void ConfigDirections()
+    {
+        if (Conn.LeftAngles[1] > 5.0f)
+        {
+            //LRArmConfig[0].SetActive(true);
+            LRArm[0].color = new Color32(255, 0, 0,255);
+            LRArmConfig[1].SetActive(false);
+            LRArmConfig[2].SetActive(true);
+        }
+        else if (Conn.LeftAngles[1] < -5.0f)
+        {
+            //LRArmConfig[0].SetActive(true);
+            LRArm[0].color = new Color32(255, 0, 0,255);
+            LRArmConfig[1].SetActive(true);
+            LRArmConfig[2].SetActive(false);
+        }
+        else
+        {
+            LRArm[0].color = new Color32(33, 168, 34, 255);
+            LRArmConfig[1].SetActive(false);
+            LRArmConfig[2].SetActive(false);
+        }
+
+        if (Conn.RightAngles[1] > 5.0f)
+        {
+            //LRArmConfig[0].SetActive(true);
+            LRArm[1].color = new Color32(255, 0, 0,255);
+            LRArmConfig[4].SetActive(true);
+            LRArmConfig[5].SetActive(false);
+        }
+        else if (Conn.RightAngles[1] < -5.0f)
+        {
+            //LRArmConfig[0].SetActive(true);
+            LRArm[1].color = new Color32(255, 0, 0,255);
+            LRArmConfig[4].SetActive(false);
+            LRArmConfig[5].SetActive(true);
+        }
+        else
+        {
+            LRArm[1].color = new Color32(33, 168, 34,255);
+            LRArmConfig[4].SetActive(false);
+            LRArmConfig[5].SetActive(false);
+        }
+    }
+
     public void _animate()
     {
         if (!RecordedActivities.isOn)
@@ -843,8 +932,9 @@ public class PlayerController : MonoBehaviour {
             //Curr_Anim.enabled = false;
             ActivityIteration = 0;
         }
-
+        Instructer.SetActive(true);
         Live = false;
+        testing = false;
     }
 
     public void _PlayingBack()

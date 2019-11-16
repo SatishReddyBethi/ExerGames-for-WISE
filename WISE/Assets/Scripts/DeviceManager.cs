@@ -55,6 +55,8 @@ public class DeviceManager : MonoBehaviour
     public Quaternion TestQuat;
     public string TestConfig;
     public Vector3 TestAngles;
+
+
     private void Start()
     {
         pause = true;
@@ -115,38 +117,51 @@ public class DeviceManager : MonoBehaviour
         PatientMenu_Activities.options = Activties.options;
     }
 
-    public void GameStart()
+    public void GameStart(bool Save)
     {
-
-        pause = false;
-        string Time_ = System.DateTime.Now.ToString("_dd_MM_yyyy_HH_mm_ss");
-
-        PatientName = Name.text;
-        gender = Gender.options[Gender.value].text;
-        dexterity = Dexterity.options[Dexterity.value].text;
-        difficulty = Difficulty.options[Difficulty.value].text;
-        age = Age.options[Age.value].text;
-        CurrentActivity = Activties.options[Activties.value].text;
-        if (PatientName == "")
+        if (Save)
         {
-            PatientName = "Unknown_Subject";
-        }
+            pause = false;
+            string Time_ = System.DateTime.Now.ToString("_dd_MM_yyyy_HH_mm_ss");
 
-        dictionaryFullName_P = savedDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
-        dictionaryFullName_PA = savedAngleDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
-        string Patient_Data = age + "," + gender + "," + dexterity + "," + difficulty;
-        if (PatientDictionary.ContainsKey(PatientName) == false)
+            PatientName = Name.text;
+            gender = Gender.options[Gender.value].text;
+            dexterity = Dexterity.options[Dexterity.value].text;
+            difficulty = Difficulty.options[Difficulty.value].text;
+            age = Age.options[Age.value].text;
+            CurrentActivity = Activties.options[Activties.value].text;
+            if (PatientName == "")
+            {
+                PatientName = "Unknown_Subject";
+            }
+
+            dictionaryFullName_P = savedDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
+            dictionaryFullName_PA = savedAngleDataPath + "/" + PatientName + "/" + CurrentActivity + "/" + PatientName + Time_ + ".txt";
+            string Patient_Data = age + "," + gender + "," + dexterity + "," + difficulty;
+            if (PatientDictionary.ContainsKey(PatientName) == false)
+            {
+                PatientDictionary.Add(PatientName, Patient_Data);
+            }
+            UI.SetActive(false);
+            //Time.timeScale = 1.0f;
+            Conn.Save_Statics();
+            SaveEveryIteration(Patient_Data + "\n", true);
+
+            StartTime = Time.realtimeSinceStartup;
+            InvokeRepeating("Saving", 0f, 0.01f);
+            ChangeCameraView();
+        }
+        else
         {
-            PatientDictionary.Add(PatientName, Patient_Data);
+            pause = false;
+            UI.SetActive(false);
+            Conn.Save_Statics();
+            PlayerModels[0].transform.localPosition = new Vector3(-1.3f, 0.5f, -1.7f);
+            PlayerModels[1].transform.localPosition = new Vector3(-1.3f, 0.5f, -1.6f);
         }
-        UI.SetActive(false);
-        //Time.timeScale = 1.0f;
-        Conn.Save_Statics();
-        SaveEveryIteration(Patient_Data + "\n", true);
-
-        StartTime = Time.realtimeSinceStartup;
-        InvokeRepeating("Saving", 0f, 0.01f);
     }
+
+
     public PlayerController PC;
     private string GlobalAngles;
     string dictionaryFullName_PA;
@@ -216,6 +231,12 @@ public class DeviceManager : MonoBehaviour
         //StopAllCoroutines();
         CancelInvoke();
         pause = true;
+        PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, CameraView.value * 180.0f, 0f);
+        PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, CameraView.value * 180.0f, 0f);
+        PlayerModels[0].transform.rotation = Quaternion.Euler(0f, CameraView.value * -20.0f, 0f);
+        PlayerModels[1].transform.rotation = Quaternion.Euler(0f, CameraView.value * 20.0f, 0f);
+        PlayerModels[0].transform.localPosition = new Vector3(0.7f, 0.5f, -1.7f);
+        PlayerModels[1].transform.localPosition = new Vector3(-3.34f, 0.5f, -1.6f);
     }
 
     #region MainMenu UI
@@ -255,6 +276,13 @@ public class DeviceManager : MonoBehaviour
             PlayerTexts[0].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
             PlayerTexts[1].transform.rotation = Quaternion.Euler(0f, 90.0f, 0f);
         }
+    }
+
+    public Dropdown ConfigureView;
+    public void ConfigureCameraView()
+    {
+        cam.transform.position = CameraTransforms[ConfigureView.value].position;
+        cam.transform.rotation = CameraTransforms[ConfigureView.value].rotation;
     }
 
     public void ChangeCameraView()

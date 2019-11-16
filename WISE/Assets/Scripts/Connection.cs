@@ -84,6 +84,10 @@ public class Connection : MonoBehaviour
     public bool debug = true;
     public bool LeftAbbAdd;
     public bool RightAbbAdd;
+    Vector3 tempaxis;
+    float tempangle;
+    public float Hts;//Highest Time Stamp
+    public Image[] DataImages;
 
     public List<int[]> Calibrations = new List<int[]>();
     // Use this for initialization
@@ -220,6 +224,23 @@ public class Connection : MonoBehaviour
                     RightAngles[0] = RightArm_Angles.y;
                 }
 
+                if (LeftArm_Angles.z > 180.0f)
+                {
+                    LeftArm_Angles.z = LeftArm_Angles.z - 360.0f;
+                }
+                else if (LeftArm_Angles.z < -180.0f)
+                {
+                    LeftArm_Angles.z = LeftArm_Angles.z + 360.0f;
+                }
+                if (RightArm_Angles.z > 180.0f)
+                {
+                    RightArm_Angles.z = RightArm_Angles.z - 360.0f;
+                }
+                else if (RightArm_Angles.z < -180.0f)
+                {
+                    RightArm_Angles.z = RightArm_Angles.z + 360.0f;
+                }
+
                 LeftAngles[1] = LeftArm_Angles.z;// Left Internal External Rotation
                 RightAngles[1] = RightArm_Angles.z;// Right Internal External Rotation
                 LeftAngles[3] = LeftForeArm_Angles.y;// Left Extension Flexsion
@@ -311,6 +332,7 @@ public class Connection : MonoBehaviour
         q = new Quaternion(-q.x, -q.y, -q.z, -q.w);
         return q;
     }
+
     Quaternion Box_Transf(char DeviceName, Quaternion Q)
     {
         Quaternion q = Quaternion.identity;
@@ -359,11 +381,7 @@ public class Connection : MonoBehaviour
             euler.z = angle_z[Device];
         }
         return euler;
-    }
-
-
-    Vector3 tempaxis;
-    float tempangle;
+    }  
 
     public Vector3 GetAngles(string DeviceName, Quaternion qRef, Quaternion q)
     {
@@ -458,7 +476,6 @@ public class Connection : MonoBehaviour
 
         return R;
     }
-
 
     Vector3 twoaxisrot(float r11, float r12, float r21, float r31, float r32, string type, Quaternion q)
     {
@@ -763,9 +780,7 @@ public class Connection : MonoBehaviour
         Qe = Qy * Q;
         return Qe;
     }
-
-
-    public float Hts;//Highest Time Stamp
+    
     void InvokeMultipleStream()
     {
         if (sp != null)
@@ -794,6 +809,7 @@ public class Connection : MonoBehaviour
         sp.WriteLine(message);
         sp.BaseStream.Flush();
     }
+
     public bool ReadFromArduino()
     {
         bool ReadStatus = true;
@@ -828,8 +844,18 @@ public class Connection : MonoBehaviour
         timeout = 0;
         Initialize();
     }
+
+    private void NoData()
+    {
+        foreach(Image Img in DataImages)
+        {
+            Img.color = new Color32(255, 0, 0, 255);
+        }
+    }
+
     public void ParseAngles()
     {
+        NoData();
         bool ReadStatus = true;
         string[] forces = Line.Split(',');
         if (forces.Length == 5 || forces.Length == 10 || forces.Length == 15 || forces.Length == 20)
@@ -863,6 +889,7 @@ public class Connection : MonoBehaviour
                                     _device[0] = true;
                                 }
                                 Calibrations[0] = new int[] { 3, 3, 3, 3 };
+                                DataImages[0].color = new Color32(0, 200, 0, 255);
                                 break;
                             case "b":
                                 w[1] = (float.Parse(forces[(5 * i) + 1]) * 2.0f / 999.0f) - 1.0f;
@@ -877,6 +904,7 @@ public class Connection : MonoBehaviour
                                     _device[1] = true;
                                 }
                                 Calibrations[1] = new int[] { 3, 3, 3, 3 };
+                                DataImages[1].color = new Color32(0, 200, 0, 255);
                                 break;
                             case "c":
                                 w[2] = (float.Parse(forces[(5 * i) + 1]) * 2.0f / 999.0f) - 1.0f;
@@ -891,6 +919,7 @@ public class Connection : MonoBehaviour
                                     _device[2] = true;
                                 }
                                 Calibrations[2] = new int[] { 3, 3, 3, 3 };
+                                DataImages[2].color = new Color32(0, 200, 0, 255);
                                 break;
                             case "d":
                                 w[3] = (float.Parse(forces[(5 * i) + 1]) * 2.0f / 999.0f) - 1.0f;
@@ -905,6 +934,7 @@ public class Connection : MonoBehaviour
                                     _device[3] = true;
                                 }
                                 Calibrations[3] = new int[] { 3, 3, 3, 3 };
+                                DataImages[3].color = new Color32(0, 200, 0, 255);
                                 break;
                             case "e":
                                 w[4] = (float.Parse(forces[(5 * i) + 1]) * 2.0f / 999.0f) - 1.0f;
@@ -919,6 +949,7 @@ public class Connection : MonoBehaviour
                                     _device[4] = true;
                                 }
                                 Calibrations[4] = new int[] { 3, 3, 3, 3 };
+                                DataImages[4].color = new Color32(0, 200, 0, 255);
                                 break;
                             default:
                                 break;

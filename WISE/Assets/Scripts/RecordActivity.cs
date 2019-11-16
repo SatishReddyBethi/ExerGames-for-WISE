@@ -144,9 +144,15 @@ public class RecordActivity : MonoBehaviour
     public Dropdown Subjects;
     public List<Vector2> ContentSize = new List<Vector2>();
     public List<GameObject> SubjectsUI = new List<GameObject>();
+    public Text SubjDetails;
 
     public string[] ActivityFileNames;//Names of Activities
     public string[] SubjectIDs;//Names of Directories
+
+    public void DisplaySubject()
+    {
+        SubjDetails.text = SubjectIDs[Subjects.value];
+    }
 
     public void DeleteActivity()
     {
